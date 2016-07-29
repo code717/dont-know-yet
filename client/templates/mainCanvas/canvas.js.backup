@@ -1,0 +1,1005 @@
+$(function(){
+	// zmienne canvasu
+	var cv, ctx;
+	var pusharray = new Array();
+	var cStep = -1;
+	// Zmienne narzedzi
+	var curTool;
+	var tool, x, y;
+	var boolMouseDown = false;
+
+	// Opcje narzedzi
+	var colour, colourtlo, width, kolorcien, blurshadow;
+
+	var clickedTool = false;
+
+	// canvas zczytac
+	cv = $("#bloodyPaint").get(0);
+	if (!cv.getContext) {
+		alert("Failed");
+		return;
+	}
+
+	// Canvas zczytac tresc
+	ctx = cv.getContext('2d');
+	if (!ctx) {
+		alert("Failed");
+		return;
+	}
+
+	// slidery 
+	$("#red, #green, #blue").slider({
+		range: "min",
+		min: 0,
+		max: 255,
+		value: 127,
+		slide: updColour,
+		change: updColour
+	});
+
+
+	$("#red2, #green2, #blue2").slider({
+		range: "min",
+		min: 0,
+		max: 255,
+		value: 255,
+		slide: updColourTlo,
+		change: updColourTlo
+	});
+
+
+	$("#red3, #green3, #blue3").slider({
+		range: "min",
+		min: 0,
+		max: 255,
+		value: 0,
+		slide: updCien,
+		change: updCien
+	});
+
+	$("#cienblur").slider({
+		range: "min",
+		min: 0,
+		max: 30,
+		value: 0,
+		step: 0.3,
+		slide: updCienBlur,
+		change: updCienBlur
+
+	});
+
+	$("#bright").slider({
+		range: "min",
+		min: 0,
+		max: 10,
+		value: 1,
+		step: 0.01,
+		slide: updFiltry,
+		change: updFiltry,
+	});
+
+	$("#width").slider({
+		range: "min",
+		min: 1,
+		max: 50,
+		value: 5,
+		slide: updFiltry,
+		change: updFiltry,
+	});
+
+	$("#blur").slider({
+		range: "min",
+		min: 0,
+		max: 10,
+		value: 0,
+		step: 0.01,
+		slide: updFiltry,
+		change: updFiltry,
+	});
+
+	$("#grayscale").slider({
+		range: "min",
+		min: 0,
+		max: 1,
+		value: 0,
+		step: 0.01,
+		slide: updFiltry,
+		change: updFiltry,
+	})
+
+	$("#sepia").slider({
+		range: "min",
+		min: 0,
+		max: 1,
+		value: 0,
+		step: 0.01,
+		slide: updFiltry,
+		change: updFiltry,
+	})
+
+	$("#invert").slider({
+		range: "min",
+		min: 0,
+		max: 1,
+		value: 0,
+		step: 0.01,
+		slide: updFiltry,
+		change: updFiltry,
+	})
+
+	$("#hue").slider({
+		range: "min",
+		min: 0,
+		max: 360,
+		value: 0,
+		step: 30,
+		slide: updFiltry,
+		change: updFiltry,
+	})
+
+	$("#opacity").slider({
+		range: "max",
+		min: 0,
+		max: 1,
+		value: 1,
+		step: 0.01,
+		slide: updFiltry,
+		change: updFiltry,
+	})
+	updColour();
+	updColourTlo();
+	// Bind zdarzenia
+	$("#bloodyPaint").bind('mousedown mousemove mouseup click', util);
+	$("#clear").bind('click', clearAll);
+
+
+	// Update grubosc
+	function updWidth() {
+		width = $("#width").slider("value");
+
+	}
+
+	// Zamiana wartosci na szesnastkowy system
+	function hexFromRGB(r, g, b) {
+		var hex = [r.toString(16), g.toString(16), b.toString(16)];
+		$.each(hex, function(nr, val) {
+			if (val.length == 1) {
+				hex[nr] = '0' + val;
+			}
+		});
+		return hex.join('').toUpperCase();
+	}
+
+	// Update kolor 	
+	function updColour() {
+		var red = $("#red").slider("value"),
+			green = $("#green").slider("value"),
+			blue = $("#blue").slider("value"),
+			hex = hexFromRGB(red, green, blue);
+		$("#swatch").css("background-color", "#" + hex);
+		colour = '#' + hex;
+		$("#kolorn").val(colour);
+
+	}
+
+	function updCien() {
+		var red = $("#red3").slider("value"),
+			green = $("#green3").slider("value"),
+			blue = $("#blue3").slider("value"),
+			hex = hexFromRGB(red, green, blue);
+		$("#swatch3").css("background-color", "#" + hex);
+		kolorcien = '#' + hex;
+		$("#kolor3n").val(kolorcien);
+	}
+
+	function updCienBlur() {
+		blurshadow = $("#cienblur").slider("value");
+		$("#liczbacien").val(blurshadow);
+
+	}
+
+
+	$("#fastblack").click(function() {
+		colour = '#000000';
+		$("#kolorn").val(colour);
+		$("#swatch").css("background-color", "#000000");
+
+		$("#red").slider("value", 0);
+		$("#green").slider("value", 0);
+		$("#blue").slider("value", 0);
+	});
+
+	$("#fastwhite").click(function() {
+		colour = '#111111';
+		$("#kolorn").val(colour);
+		$("#swatch").css("background-color", "#111111");
+
+		$("#red").slider("value", 255);
+		$("#green").slider("value", 255);
+		$("#blue").slider("value", 255);
+	});
+
+	$("#fastblue").click(function() {
+		colour = '#0000FF';
+		$("#kolorn").val(colour);
+		$("#swatch").css("background-color", "#0000FF");
+
+		$("#red").slider("value", 0);
+		$("#green").slider("value", 0);
+		$("#blue").slider("value", 255);
+	});
+
+	$("#fastgreen").click(function() {
+		colour = '#00FF00';
+		$("#kolorn").val(colour);
+		$("#swatch").css("background-color", "#00FF00");
+
+		$("#red").slider("value", 0);
+		$("#green").slider("value", 255);
+		$("#blue").slider("value", 0);
+	});
+
+	$("#fastyellow").click(function() {
+		colour = '#FFFF00';
+		$("#kolorn").val(colour);
+		$("#swatch").css("background-color", "#FFFF00");
+
+		$("#red").slider("value", 255);
+		$("#green").slider("value", 255);
+		$("#blue").slider("value", 0);
+	});
+
+	$("#fastred").click(function() {
+		colour = '#FF0000';
+		$("#kolorn").val(colour);
+		$("#swatch").css("background-color", "#FF0000");
+
+		$("#red").slider("value", 255);
+		$("#green").slider("value", 0);
+		$("#blue").slider("value", 0);
+	});
+
+	function updColourTlo() // kolor tla 
+	{
+		var red2 = $("#red2").slider("value"),
+			green2 = $("#green2").slider("value"),
+			blue2 = $("#blue2").slider("value"),
+			hex2 = hexFromRGB(red2, green2, blue2);
+		$("#paint").css("background-color", "#" + hex2);
+		$("#swatch2").css("background-color", "#" + hex2);
+		colourtlo = '#' + hex2;
+		$("#kolor2n").val(colourtlo);
+	}
+
+	/* function updBrightness()  // filter jasnosci
+	{
+	var bright=$("#bright").slider("value");
+	$("#paint").css({'filter':'brightness('+bright+')','-webkit-filter':'brightness('+bright+')'});
+	
+	}
+	
+	function updBlur()
+	{
+	var blur=$("#blur").slider("value");
+	$("#paint").css({'filter':'blur('+blur+'px)','-webkit-filter':'blur('+blur+'px)'});
+	}
+	
+	function updGray()
+	{
+	var gray=$("#grayscale").slider("value");
+	$("#paint").css({'filter':'grayscale('+gray+')','-webkit-filter':'grayscale('+gray+')'});
+	
+	}
+	
+	function updSepia()
+	{
+	var sepia=$("#sepia").slider("value");
+	$("#paint").css({'filter':'sepia('+sepia+')','-webkit-filter':'sepia('+sepia+')'});
+	
+	}
+	
+	
+	function updInvert()
+	{
+	var invert=$("#invert").slider("value");
+	$("#paint").css({'filter':'invert('+invert+')','-webkit-filter':'invert('+invert+')'});
+	
+	}
+	
+	function updHue()
+	{
+	var hue=$("#hue").slider("value");
+	$("#paint").css({'filter':'hue-rotate('+hue+'deg)','-webkit-filter':'hue-rotate('+hue+'deg)'});
+	
+	}
+	
+	function updOpacity()
+	{
+	var opacity=$("#opacity").slider("value");
+	$("#paint").css({'filter':'opacity('+opacity+')','-webkit-filter':'opacity('+opacity+')'});
+	
+	}
+	 */
+	function updFiltry() {
+		var bright = $("#bright").slider("value");
+		var blur = $("#blur").slider("value");
+		var gray = $("#grayscale").slider("value");
+		var sepia = $("#sepia").slider("value");
+		var invert = $("#invert").slider("value");
+		var opacity = $("#opacity").slider("value");
+		var hue = $("#hue").slider("value");
+		$("#paint").css({
+			'filter': 'brightness(' + bright + ') blur(' + blur + 'px) grayscale(' + gray + ') sepia(' + sepia + ') invert(' + invert + ') hue-rotate(' + hue + 'deg) opacity(' + opacity + ') ',
+			'-webkit-filter': 'brightness(' + bright + ') blur(' + blur + 'px) grayscale(' + gray + ') sepia(' + sepia + ') invert(' + invert + ') hue-rotate(' + hue + 'deg) opacity(' + opacity + ')'
+		});
+	}
+	// Ustaw narzedzie wybrane
+	var sel;
+	$("#kalash").click(function() {
+		sel = 'kalash';
+		valeragra();
+	});
+	$("#karandash").click(function() {
+		sel = 'karandash';
+		pencilgra();
+	});
+	$("#eraser").click(function() {
+		sel = 'eraser';
+		erasegra();
+	});
+	$("#mlotek").click(function() {
+		sel = 'mlotek';
+	});
+	$("#blood").click(function() {
+		sel = 'blood';
+		bloodgra();
+	});
+
+	$("#spray").click(function() {
+		sel = 'spray';
+	});
+
+	$("#kolca").click(function() {
+		sel = 'kolca';
+	});
+
+
+	function updTool() {
+
+
+
+		//var sel= $('#tools').val();
+		switch (sel) {
+			case 'karandash':
+				curTool = karandash;
+				document.body.style.cursor = "url('pen2.png'),auto";
+				break;
+			case 'eraser':
+				curTool = eraser;
+				document.body.style.cursor = "url('scior.png'), auto";
+				break;
+			case 'kalash':
+				curTool = kalash;
+				document.body.style.cursor = "url('kalash.png'), auto";
+				break;
+			case 'mlotek':
+				curTool = mlotek;
+				document.body.style.cursor = "url('mlotek.png'), auto";
+				break;
+			case 'blood':
+				curTool = blood;
+				document.body.style.cursor = "url('bloodhand.png'), auto";
+				break;
+			case 'spray':
+				curTool = spray;
+				document.body.style.cursor = "url('spray.png'), auto";
+				break;
+			case 'kolca':
+				curTool = spray2;
+				document.body.style.cursor = "url('spray2.png'), auto";
+				break;
+		}
+		document.getElementById(sel).style.backgroundColor = "red";
+	}
+
+
+	// Update pozycjy myszki
+	function updXY(e) {
+		var elem = e.target;
+		var top = 0,
+			left = 0;
+		while (elem.offsetParent) {
+			top += elem.offsetTop;
+			left += elem.offsetLeft;
+			elem = elem.offsetParent;
+		}
+
+		x = e.pageX - left;
+		y = e.pageY - top;
+	}
+
+	function updClick() {
+		var x = document.getElementsByClassName('btn');
+		for (var i = 0; i < x.length; i++) {
+			x[i].style.backgroundColor = "#CFCFCF";
+		}
+
+
+		document.getElementById(sel).style.backgroundColor = "green";
+
+
+	}
+
+	// Update potrzebne zmienne i funkcje
+	function util(e) {
+		updColour();
+		updColourTlo();
+		updCien();
+		updCienBlur();
+		updTool();
+		updWidth();
+		updXY(e);
+
+		updClick();
+
+		tool = new curTool();
+		var call = tool[e.type];
+		call(e);
+	}
+	updCien();
+	updCienBlur();
+	// Narzedzie karandash
+	function karandash() {
+		var audio = document.getElementById("dzwiek4");
+		this.mousedown = function(e) {
+			ctx.beginPath();
+			ctx.lineWidth = width;
+			ctx.lineCap = 'round';
+			ctx.lineJoin = 'round';
+			ctx.shadowBlur = blurshadow;
+			ctx.shadowColor = kolorcien;
+			ctx.moveTo(x, y);
+			boolMouseDown = true;
+
+		}
+
+		this.mousemove = function(e) {
+
+			if (boolMouseDown) {
+				ctx.lineTo(x, y);
+				ctx.strokeStyle = colour;
+
+				ctx.stroke();
+				audio.addEventListener('ended', function() {
+					this.currentTime = 0;
+					this.play();
+				}, false);
+				audio.play();
+			}
+		}
+
+		this.mouseup = function(e) {
+
+			
+		}
+	}
+
+	// Narzedzie do scierania
+	function eraser() {
+		var audio = document.getElementById("dzwiek5");
+		this.mousedown = function(e) {
+			ctx.beginPath();
+			ctx.moveTo(x, y);
+			ctx.shadowBlur = 0;
+			boolMouseDown = true;
+
+		}
+
+		this.mousemove = function(e) {
+
+
+			if (boolMouseDown) {
+				ctx.lineTo(x, y);
+				ctx.strokeStyle = colourtlo;
+				ctx.lineWidth = width;
+				ctx.stroke();
+				audio.addEventListener('ended', function() {
+					this.currentTime = 0;
+					this.play();
+				}, false);
+				audio.play();
+			}
+		}
+
+		this.mouseup = function(e) {
+			if (boolMouseDown) {
+				tool.mousemove(e);
+				boolMouseDown = false;
+				audio.pause();
+				cPush();
+			}
+		}
+	}
+	// narzedzie kalashnikov
+	function kalash() {
+		var rys = new Image();
+		rys.src = "gunshot.png";
+		var audio = document.getElementById("dzwiek");
+
+
+		this.click = function(e) {
+
+			if (audio.paused) {
+				audio.play();
+			}
+			else {
+				audio.currentTime = 0;
+
+			}
+			audio.play();
+			//Chrome pracuji albo firefox
+			x = Math.round(e.offsetX == undefined ? e.clientX - $(e.target).offset().left + window.pageXOffset - rys.width / 2 : e.offsetX - rys.width / 2);
+			y = Math.round(e.offsetY == undefined ? e.clientY - $(e.target).offset().top + window.pageYOffset - rys.height / 2 : e.offsetY - rys.height / 2);
+			ctx.drawImage(rys, x, y);
+
+			//firefox
+			/* var offX  = Math.round((e.offsetX || e.clientX - $(e.target).offset().left+window.pageXOffset-rys.width/2 ));
+			var offY=Math.round((e.offsetX || e.clientY-$(e.target).offset().top+window.pageYOffset-rys.height/2));
+			ctx.drawImage(rys,offX,offY); */
+
+		}
+
+	}
+	// narzedzie mlotek
+	function mlotek() {
+		var min = 0,
+			max = 2;
+		var mlotki = ["crack1.png", "crack2.png", "crack3.png"];
+		var audio = document.getElementById("dzwiek2");
+
+		var mlotekimg = new Image();
+
+
+
+		this.click = function(e) {
+			if (audio.paused) {
+				audio.play();
+			}
+			else {
+				audio.currentTime = 0;
+
+			}
+			audio.play();
+			var liczba = Math.floor(Math.random() * (max - min + 1)) + min;
+			mlotekimg.src = mlotki[liczba];
+			//x = Math.round(e.offsetX - mlotekimg.width/2);
+			// y = Math.round(e.offsetY - mlotekimg.height/2); 
+			x = Math.round(e.offsetX == undefined ? e.clientX - $(e.target).offset().left + window.pageXOffset - mlotekimg.width / 2 : e.offsetX - mlotekimg.width / 2);
+			y = Math.round(e.offsetY == undefined ? e.clientY - $(e.target).offset().top + window.pageYOffset - mlotekimg.height / 2 : e.offsetY - mlotekimg.height / 2);
+			ctx.drawImage(mlotekimg, x, y);
+
+		}
+	}
+	// narzedzie krew
+	function blood() {
+		var min = 0,
+			max = 5;
+		var krawiaszki = ["blood1.png", "blood2.png", "blood3.png", "blood4.png", "blood5.png", "blood6.png"];
+		var krew = new Image();
+		var audio = document.getElementById("dzwiek6");
+		this.click = function(e) {
+			var los = Math.floor(Math.random() * (max - min + 1)) + min;
+			krew.src = krawiaszki[los];
+			if (audio.paused) {
+				audio.play();
+			}
+			else {
+				audio.currentTime = 0;
+
+			}
+			audio.play();
+			//x = Math.round(e.offsetX - krew.width/2);
+			//y = Math.round(e.offsetY - krew.height/2); 
+			x = Math.round(e.offsetX == undefined ? e.clientX - $(e.target).offset().left + window.pageXOffset - krew.width / 2 : e.offsetX - krew.width / 2);
+			y = Math.round(e.offsetY == undefined ? e.clientY - $(e.target).offset().top + window.pageYOffset - krew.height / 2 : e.offsetY - krew.height / 2);
+			ctx.drawImage(krew, x, y);
+		}
+
+	}
+
+
+	function rectanglse() {
+		this.mousedown = function(e) {
+			ctx.beginPath();
+			ctx.lineWidth = width;
+			ctx.lineCap = 'round';
+			ctx.lineJoin = 'round';
+			ctx.shadowBlur = blurshadow;
+			ctx.shadowColor = kolorcien;
+			ctx.moveTo(x, y);
+			boolMouseDown = true;
+		}
+
+		this.mousemove = function(e) {
+			if (boolMouseDown) {
+				ctx.lineTo(x, y);
+				ctx.strokeStyle = colour;
+
+				ctx.stroke();
+				audio.addEventListener('ended', function() {
+					this.currentTime = 0;
+					this.play();
+				}, false);
+				audio.play();
+			}
+		}
+
+		this.mouseup = function(e) {
+
+			if (boolMouseDown) {
+				tool.mousemove(e);
+				boolMouseDown = false;
+				audio.pause();
+			}
+		}
+	}
+
+
+	// Wyczysc canvas
+	function clearAll() {
+
+		ctx.clearRect(0, 0, cv.width, cv.height);
+		cleargra();
+	}
+
+
+
+
+	var imageLoader = document.getElementById('imageLoader');
+	imageLoader.addEventListener('change', handleImage, false);
+	/* var canvas = document.getElementById('paint');
+	var ctx = canvas.getContext('2d'); */
+
+
+	function handleImage(e) {
+		var reader = new FileReader();
+		reader.onload = function(event) {
+			var img = new Image();
+			img.onload = function() {
+				cv.width = img.width;
+				cv.height = img.height;
+				ctx.drawImage(img, 0, 0);
+			}
+			img.src = event.target.result;
+		}
+		reader.readAsDataURL(e.target.files[0]);
+	}
+
+
+	window.chosen = function(id) {
+		if (clickedTool == false) {
+
+			clickedTool = true;
+			document.getElementById(id).style.backgroundColor = "red";
+		}
+		else {
+			clickedTool = false;
+			document.getElementById(id).style.backgroundColor = "white";
+		}
+
+
+	}
+
+
+
+	window.rozbijSzklo = function() {
+		var szklo = new Image();
+		var audio = document.getElementById("dzwiek3");
+		if (audio.paused) {
+			audio.play();
+		}
+		else {
+			audio.currentTime = 0;
+
+		}
+		szklo.src = "brokenglass.png";
+		szklo.height = cv.height;
+		szklo.width = cv.width;
+		ctx.drawImage(szklo, 0, 0, szklo.width, szklo.height);
+
+	}
+
+	window.valeragra = function() {
+		var audio = document.getElementById("dzwiek7");
+		audio.play();
+	}
+
+	window.molotgra = function() {
+		var min = 0,
+			max = 1;
+		var los = Math.floor(Math.random() * (max - min + 1)) + min;
+		var audios = ["dzwiek8", "dzwiek14"];
+		var audio = document.getElementById(audios[los]);
+		audio.play();
+	}
+
+	window.erasegra = function() {
+		var audio = document.getElementById("dzwiek9");
+		audio.play();
+	}
+
+
+	window.cleargra = function() {
+		var audio = document.getElementById("dzwiek15");
+		audio.play();
+	}
+	window.bloodgra = function() {
+		var audio = document.getElementById("dzwiek10");
+		audio.play();
+	}
+
+	window.pencilgra = function() {
+		var min = 0,
+			max = 2;
+		var los = Math.floor(Math.random() * (max - min + 1)) + min;
+		var audios = ["dzwiek11", "dzwiek12", "dzwiek13"];
+		var audio = document.getElementById(audios[los]);
+		audio.play();
+	}
+
+	/*  window.valera=function($val){
+	var audio=document.getElementById("dzwiek7");
+	if ($val=="kalash"){
+	audio.play();
+	}
+	}  */
+
+
+	$("#zwieksz").resizable();
+
+
+
+	function spray() {
+		var audio = document.getElementById("dzwiek16");
+		var isDrawing;
+		var density = 50;
+
+		function getRandomInt(min, max) {
+			return Math.floor(Math.random() * (max - min + 1)) + min;
+		}
+
+		this.mousedown = function(e) {
+			isDrawing = true;
+			ctx.lineWidth = width;
+			ctx.lineJoin = ctx.lineCap = 'round';
+			boolMouseDown = true;
+			ctx.shadowBlur = blurshadow;
+			ctx.shadowColor = kolorcien;
+			ctx.moveTo(x, y);
+
+		}
+		this.mousemove = function(e) {
+			if (boolMouseDown) {
+				ctx.fillStyle = colour;
+				audio.addEventListener('ended', function() {
+					this.currentTime = 0;
+					this.play();
+				}, false);
+				audio.play();
+				for (var i = density; i--;) {
+
+					var radius = width;
+					var offsetiX = getRandomInt(-radius, radius);
+					var offsetiY = getRandomInt(-radius, radius);
+					ctx.fillRect(x + offsetiX, y + offsetiY, 1, 1);
+				}
+			}
+		}
+		this.mouseup = function(e) {
+			boolMouseDown = false;
+			audio.pause();
+			cPush();
+		}
+	}
+
+	function kolca() {
+
+		function distanceBetween(point1, point2) {
+			return Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
+		}
+
+		function angleBetween(point1, point2) {
+			return Math.atan2(point2.x - point1.x, point2.y - point1.y);
+		}
+
+
+		ctx.fillStyle = "FF00FF";
+		ctx.strokeStyle = '#333';
+
+		var isDrawing, lastPoint;
+
+		this.mousedown = function(e) {
+			isDrawing = true;
+			boolMouseDown = true;
+			lastPoint = {
+				x: e.offsetX,
+				y: e.offsetY
+			};
+		}
+
+		this.mousemove = function(e) {
+			if (boolMouseDown) {
+
+				var currentPoint = {
+					x: e.clientX,
+					y: e.clientY
+				};
+				var dist = distanceBetween(lastPoint, currentPoint);
+				var angle = angleBetween(lastPoint, currentPoint);
+
+				for (var i = 0; i < dist; i += 5) {
+					x = lastPoint.x + (Math.sin(angle) * i) - 25;
+					y = lastPoint.y + (Math.cos(angle) * i) - 25;
+					ctx.beginPath();
+
+					ctx.arc(x + 10, y + 10, 20, false, Math.PI * 2, false);
+					ctx.closePath();
+					ctx.fill();
+					ctx.stroke();
+				}
+
+				lastPoint = currentPoint;
+			}
+		}
+
+		this.mouseup = function() {
+			isDrawing = false;
+			boolMouseDown = false;
+		}
+
+	}
+
+
+	function spray2() {
+		var clientX, clientY, timeout;
+		var density = 50;
+		var audio = document.getElementById("dzwiek16");
+
+		function getRandomFloat(min, max) {
+			return Math.random() * (max - min) + min;
+		}
+
+		this.mousedown = function(e) {
+			ctx.lineJoin = ctx.lineCap = 'round';
+			ctx.fillStyle = colour;
+			ctx.lineWidth = width;
+			boolMouseDown = true;
+
+			timeout = setTimeout(draw, 50);
+		}
+		this.mousemove = function(e) {
+			if (boolMouseDown) {
+				audio.addEventListener('ended', function() {
+					this.currentTime = 0;
+					this.play();
+				}, false);
+				audio.play();
+				timeout = setTimeout(function draw() {
+					for (var i = density; i--;) {
+						var angle = getRandomFloat(0, Math.PI * 2);
+						var radius = getRandomFloat(0, width);
+						ctx.fillRect(
+							x + radius * Math.cos(angle),
+							y + radius * Math.sin(angle),
+							1, 1);
+					}
+
+
+				}, 50);
+			}
+		}
+		this.mouseup = function() {
+			clearTimeout(timeout);
+			boolMouseDown = false;
+			audio.pause();
+			cPush();
+		}
+
+
+	}
+
+	function cPush() {
+		cStep++;
+		if (cStep < pusharray.length) {
+			pusharray.length = cStep;
+		}
+		pusharray.push(document.getElementById('paint').toDataURL());
+		// document.title = cStep + ":" + pusharray.length;
+	}
+	window.cUndo = function() {
+		if (cStep > 0) {
+			cStep--;
+			var canvasPic = new Image();
+			canvasPic.src = pusharray[cStep];
+			ctx.clearRect(0, 0, cv.width, cv.height);
+			ctx.drawImage(canvasPic, 0, 0);
+			//document.title = cStep + ":" + pusharray.length;
+		}
+	}
+	window.cRedo = function() {
+		if (cStep < pusharray.length - 1) {
+			cStep++;
+			var canvasPic = new Image();
+			canvasPic.src = pusharray[cStep];
+			canvasPic.onload = function() {
+					ctx.drawImage(canvasPic, 0, 0);
+				}
+				//document.title = cStep + ":" + pusharray.length;
+		}
+	}
+
+});
+
+
+Template.sideBar.onRendered(function(){
+	
+    $("#green, #blue").slider({
+        orientation: "horizantal", 
+        range: "min", 
+        min: 0, 
+        max: 100, 
+        value: 60,
+        slide: function (event, ui){ 
+            $("#kolorn").val(ui.value); 
+        }
+    });
+    $("#kolorn").val($("#green, #blue").slider("value"));
+
+
+function UpdateSlider(PhaseInStatusReportVal) {
+    $("#green, #blue").slider("value", PhaseInStatusReportVal);
+}
+
+    $('#kolorn').change(function(){
+        UpdateSlider(this.value);
+    })
+    
+    
+    $('#red').slider({
+		range: "min",
+		min: 0,
+		max: 255,
+		value: 127,
+		slide: updColour,
+		change: updColour
+	});
+	
+	
+	function updColour() {
+		var red = $("#red").slider("value"),
+			green = $("#green").slider("value"),
+			blue = $("#blue").slider("value"),
+			hex = hexFromRGB(red, green, blue);
+		$("#swatch").css("background-color", "#" + hex);
+		var colour = '#' + hex;
+		$("#kolorn").val(colour);
+
+	}
+	
+	
+	function hexFromRGB(r, g, b) {
+		var hex = [r.toString(16), g.toString(16), b.toString(16)];
+		$.each(hex, function(nr, val) {
+			if (val.length == 1) {
+				hex[nr] = '0' + val;
+			}
+		});
+		return hex.join('').toUpperCase();
+	}
+	
+    
+    
+
+	
+	
+});

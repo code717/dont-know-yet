@@ -1,0 +1,121 @@
+<template name="sideBar">
+    <div class="col-md-3">
+        <div class="col-md-12 col-box">
+            <div class="col-md-12">
+            Main tools:
+            <br/>
+            <button class="btn" id="karandash" name="karandash" title="Pencil" onClick="pencilgra();"></button>
+            <button class="btn" id="spray" name="spray" title="Spray" onclick=""></button>
+            <button class="btn" id="kolca" name="kolca" title="Spray 2" onclick=""></button>
+            <button class="btn" id="eraser" name="eraser" title="Eraser" onClick="erasegra()"></button>
+            <span style="font-size:25px">&nbsp;&nbsp;{{ displayClock }}</span>
+        </div>
+
+        </div>
+        <div class="col-md-12 col-box">
+            <div class="col-md-12">
+            Special tools:
+            <br/>
+            <button class="btn" id="kalashnik" name="kalash" title="Kalash" onClick="valeragra()"></button>
+
+            <button class="btn" id="mlotek" name="mlotek" title="Hammer" onclick="molotgra()"></button>
+            <button class="btn" id="krew" name="blood" title="Blood Tool" onclick="bloodgra()"></button>
+
+            <button class="btn" id="clear" name="clear" title="Clear All" onclick="cleargra()"></button>
+
+            <button id="undo" Onclick="javascript:cUndo();return false;" title="Undo"></button>
+            <button id="redo" onclick="javascript:cRedo();return false;" title="Redo"></button>
+            </div>
+        </div>
+
+        <div class="col-md-12 col-box">
+            <div class="col-md-12" style="margin-bottom:5px;">
+                
+            Main tool color:
+            <div id="fastkolor">
+                <button class="fastColorButton" id="fastyellow" name="yellow" value="255-255-0"></button>
+                    <button  class="fastColorButton"  id="fastblue" name="blue" value="0-0-255"></button>
+                        <button class="fastColorButton"  id="fastblack" name="black" value="0-0-0"></button>
+                            <button class="fastColorButton"  id="fastwhite" name="white" value="255-255-255"></button>
+                                <button class="fastColorButton"  id="fastgreen" name="fastgreen" value="0-255-0"></button>
+                                    <button class="fastColorButton"  id="fastred" name="fastred" value="255-0-0"></button>
+            </div>
+            </div>
+            
+            <div class="col-md-12">
+            <div class="col-md-5" style="padding-left:0px;">Custom color:</div> <div class="col-md-7"><div class="col-md-12">
+            <div id="kolor">
+                <input type="text" id="kolorn" style="width:80px" value="{{hexFromRGB}}"/>
+                <input type="color" id="colorPicker" name="pickcolor" value="{{ hexFromRGB }}" />
+            </div>
+            </div></div>
+            <div class="col-md-12">
+            <div id="red" class="toolSliders"></div>
+            <div id="green" class="toolSliders"></div>
+            <div id="blue" class="toolSliders"></div>
+            <div id="swatch" class="ui-widget-content ui-corner-all" style="background-color:{{hexFromRGB}};"></div>
+            </div>
+        </div>
+        </div>
+        
+        <div class="col-md-12 col-box">
+            <div class="col-md-12">
+            <div class="col-md-6" style="padding-left:0px;">Main tool width:</div>
+            <div class="col-md-6" style="padding-left:0px;"><input type="text" id="toolEidth" value="{{ session 'ToolWidth' }}" style="width:50px; text-align:center;"/></div>
+            <div class="col-md-12">
+            <div id="width"></div>
+            </div>
+            </div>
+        </div>
+        <div class="col-md-12 col-box">
+            Upload image:
+            <input type="file" name="imageLoader" id="imageLoader" />
+        </div>
+        <div class="col-md-12 col-box">
+            
+            
+            <div class="col-md-6">Background color:</div><div class="col-md-6"><div id="kolor2">
+                <input type="text" id="kolor2n" style="width:80px" value="{{ hexFromRGBback }}"/>
+                <input type="color" name="colPic" id="colorPickerBack" value="{{ hexFromRGBback }}" />
+            </div></div>
+            <div class="col-md-12">
+            <div id="red2"></div>
+            <div id="green2"></div>
+            <div id="blue2"></div>
+            <div id="swatch2" class="ui-widget-content ui-corner-all" style="background-color:{{hexFromRGBback }} "></div>
+        </div>
+        </div>
+
+        <div class="col-md-12 col-box">
+            
+            <div class="col-md-6">Main tool shadow:</div><div class="col-md-6"><div id="color3">
+                <input type="text" id="color3n" style="width:80px" value="{{hexFromRGBShadow }}" />
+                <input type="color" id="colorPickerShadow" value="{{ hexFromRGBShadow }}" />
+            </div></div>
+            <div class="col-md-12">
+            <div id="red3"></div>
+            <div id="green3"></div>
+            <div id="blue3"></div>
+            <div id="swatch3" class="ui-widget-content ui-corner-all" style="background-color:{{ hexFromRGBShadow }}"></div>
+            </div>
+            
+            <div class="col-md-12" style="padding-left:0px;">
+            <div class="col-md-5">Shadow Blur:</div>
+            <div class="col-md-7"><div id="liczcien">
+                <input type="text" id="liczbacien" style="width:50px; text-align:center;" value="{{ session 'ShadowWidth' }}">
+            </div></div>
+            </div>
+            <div class="col-md-12">
+            
+            <div id="cienblur"></div>
+            </div>
+            </div>
+        </div>
+
+
+
+    
+
+
+
+</template>
